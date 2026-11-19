@@ -71,7 +71,9 @@ nhau chia cho số lần chạy có sự kiện `proposal`; lần chạy không 
 
 ### Câu 1.5 · Chọn MỘT kết luận và giải thích một câu
 
+Số minh hoạ trong đề (không phải số của bàn). Khoanh: **(a) · (b) · (c) · (d)** → Chọn **(b)**
 
+Giải thích một câu: X chỉ kém Y đúng 1/50 lần chạy, và pass_rate 1,0 của Y vẫn nằm trong khoảng tin cậy 95% [0,9400; 1,0] của X, nên chênh lệch này có thể chỉ do ngẫu nhiên: chưa đủ căn cứ nói Y tốt hơn X. (a) sai vì chênh không có ý nghĩa thống kê; (c) sai vì "không phân biệt được" không có nghĩa là "chắc chắn như nhau"; (d) sai vì chạy thêm seed chỉ thu hẹp khoảng tin cậy, không làm X "đạt", đạt hay không phải so với ngưỡng đã ký.
 
 ---
 
