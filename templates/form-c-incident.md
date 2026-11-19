@@ -324,9 +324,9 @@ python3 -m lab10.grade --incident Sx
 
 | Nhánh fault tree | Nguyên nhân | Chỗ sửa (hàm + nhánh trong `guards.py`, hoặc khoá trong `operating_gates.json`) | Tầng (phát hiện / chặn / giới hạn thiệt hại / vận hành) | GIẢM khả năng hay NGĂN hẳn? Vì sao | Mã lần chạy sau khi sửa |
 |---|---|---|---|---|---|
-| [1] | | | | | |
-| [2] | | | | | |
-| [3] | | | | | |
+| [1] | Agent lấy mã duyệt đầu tiên theo đơn/khách, không kiểm đúng ticket, đơn, khách, người duyệt, trạng thái, ngày hết hạn hay số tiền tối đa. | `write_gate` → `_approval_problem`: chỉ cho ghi khi có đúng một bản ghi và mọi trường khớp; khoản vượt `auto_limit_vnd` thiếu mã duyệt thì chuyển người. | Chặn trước `issue_refund` | Ngăn ghi khoản dựa trên phê duyệt không hợp lệ; không bảo đảm nguồn phê duyệt bên ngoài nhập đúng. | `R-S8-after-20261119-164346-42c94d` |
+| [2] Các đơn S8-40–42 hoàn tự động tổng 282.000đ cho cùng khách; S8-43/44 sẽ làm vượt trần 300.000đ/ngày. | `write_gate` → `_customer_refund_cap_problem`, dùng `ops_limits.max_auto_refund_per_customer_per_day_vnd`; vượt trần thì chuyển người. | Chặn trước `issue_refund` | Ngăn khoản tự động làm tổng vượt trần; không chặn hoàn đã có phê duyệt hợp lệ. | `R-S8-after-20261119-164617-c4869d` |
+| [3] Sau khi không còn phê duyệt sai, nhân viên vẫn cần lý do và quyền kiểm mẫu để thôi kiểm tay toàn bộ quyết định. | `config/operating_gates.json` đã có `approver_id=NV-HANH`, `decision_note=true`, `review_sampling_pct=10`; giữ nguyên vì khớp điều kiện trust của thẻ. | Vận hành | Giảm kiểm tay nhờ giải thích và kiểm mẫu; đây không phải cổng bảo đảm mọi quyết định đúng. | `R-S8-after-20261119-164617-c4869d` |
 
 ---
 
