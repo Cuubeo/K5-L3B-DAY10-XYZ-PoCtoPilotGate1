@@ -8,10 +8,10 @@
   ],
   "incident": "S8",
   "decision_v1": "Tiếp tục",
-  "decision_v2": "",
+  "decision_v2": "Tiếp tục",
   "three_lines": {
-    "environment_assumption": "",
-    "reduce_or_prevent": "",
-    "measure_in_pilot": ""
+    "environment_assumption": "Bảng `approvals` phản ánh đúng thực tế: mỗi mã duyệt chỉ gắn với một ticket, và trưởng ca cập nhật `status` ngay khi thu hồi hoặc khi mã hết hiệu lực. Ngoài đời việc thu hồi thường được báo miệng hoặc cập nhật chậm, nên một mã đã thu hồi vẫn có thể còn \"valid\" trong bảng và cổng sẽ cho qua.",
+    "reduce_or_prevent": "Cổng `_approval_problem` và trần theo khách NGĂN hẳn việc tự chi bằng mã sai ticket, hết hạn, đã thu hồi hoặc vượt `max_vnd`, và việc vượt 300.000đ/khách/ngày, vì cổng đối chiếu nguồn sự thật (bảng `approvals`, sổ cái) trước mọi `issue_refund` (hoàn sai trên gói S8 6.845.000đ → 0). Nhưng chỉ ngăn được khi bảng `approvals` đúng; còn phần lòng tin và hàng chờ của nhân viên thì chỉ GIẢM được, vì đó là hành vi của người.",
+    "measure_in_pilot": "Tỉ lệ mã duyệt tìm được không khớp ticket, hết hạn hoặc đã thu hồi trong dữ liệu thật; thời gian từ lúc trưởng ca thu hồi mã tới lúc bảng `approvals` cập nhật; tỉ lệ nhân viên thật sự kiểm lại (mục tiêu 10%) cùng thời gian chờ và số ca ùn giờ cao điểm; chi phí LLM thật mỗi ticket so với 2.952đ của mock; số khách có nhiều yêu cầu trong một ngày."
   }
 }
