@@ -71,9 +71,7 @@ nhau chia cho số lần chạy có sự kiện `proposal`; lần chạy không 
 
 ### Câu 1.5 · Chọn MỘT kết luận và giải thích một câu
 
-Số minh hoạ trong đề (không phải số của bàn). Khoanh: **(a) · (b) · (c) · (d)**
 
-Giải thích một câu: (b), vì Y hơn X đúng 1 lần chạy trên 50 và 1,0 vẫn nằm trong khoảng tin cậy [0,94; 1,0] của X, nên chưa đủ căn cứ nói Y tốt hơn X.
 
 ---
 
