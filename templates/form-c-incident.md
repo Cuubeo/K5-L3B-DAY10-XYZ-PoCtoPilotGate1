@@ -31,9 +31,9 @@ Mỗi lệnh `lab10.eval` và `lab10.grade` tự ghi một dòng vào `runs/jour
 | # | Mã lần chạy | Bộ ticket · mốc | Đổi MỘT thứ gì so với lần trước | pass_rate (khoảng tin cậy 95%) | pass_k | Hoàn sai (đ) · lỗi hãng oan · lộ dữ liệu | Tỉ lệ chuyển người | Kết luận (một câu) |
 |---|---|---|---|---|---|---|---|---|
 | 1 | `R-S8-prepared-20261119-162602-aa8f8b` (grade `R-S8-grade-20261119-162600-aa8f8b`) | S8 · prepared | nhận thẻ đã bốc, chưa sửa thêm (đúng cổng vòng 1 đã chốt) | 0.8654 [0.7692; 0.9423] | 0.8654 | 6.845.000 · 35 · 0 | 0.0 (nhưng nhân viên kiểm lại 100% quyết định tự động) | Cổng vòng 1 không đỡ được gì: prepared trùng hệt base; hàng chờ 36 ca ùn, chờ lâu nhất 216 phút, chi phí 11.325đ/ticket > làm tay, ROI −2,44 |
-| 2 | | Sx · after | | | | | | |
-| 3 | | Sx · after | | | | | | |
-| 4 | | base · after | (kiểm không regression) | | | | | |
+| 2 | `R-S8-after-20261119-165831-1890e5` (grade `R-S8-grade-20261119-165828-1890e5`) | S8 · after | Thêm cổng `write_gate` cho `issue_refund`: kiểm mã duyệt (`_approval_problem`: đúng ticket, đơn, khách, NV-HANH, `valid`, còn hạn, `max_vnd` đủ) và trần 300.000đ/khách/ngày (`_customer_refund_cap_problem`) | 1.0 [1.0; 1.0] | 1.0 | 0 · 0 · 0 | 0.1346 | Hết ticket hỏng: hoàn sai 6.845.000đ → 0, lỗi hãng oan 35 → 0; niềm tin nhân viên duyệt **đạt**; 0 ca ùn, chờ lâu nhất 5 phút; chi phí 2.952đ/ticket, ROI 2,39; PASS-VISIBLE |
+| 3 | `R-S8-after-20261119-170048-c72bc2` (grade `R-S8-grade-20261119-170048-c72bc2`) | S8 · after | Trần theo khách chỉ cộng khoản hoàn tự động **của hôm nay** (`_auto_rows_today`), bỏ sổ cái các ngày trước (`ledger_seed`, ví dụ C-01 có 18.000đ từ `T-OLD-1017`) | 1.0 [1.0; 1.0] | 1.0 | 0 · 0 · 0 | 0.1346 | Số trên gói S8 giữ nguyên (monitor `max_customer_daily_refund_vnd` 282.000đ < 300.000đ); sửa để không chuyển người oan khách đã từng được hoàn ở ngày khác (thử trực tiếp: C-01 khoản 290.000đ bản cũ chặn, bản mới cho qua; thêm 110.000đ sau 200.000đ trong ngày vẫn chặn) |
+| 4 | `R-base-after-20261119-170215-c72bc2` | base · after | (kiểm không regression) sau cả hai lần sửa | 1.0 [1.0; 1.0] | 1.0 | 0 · 0 · 0 | 0.2364 | Bộ nền giữ nguyên như prepared: 110/110 đạt, chi phí 4.510đ/ticket, ROI 1,22, 0 ca ùn; không ca nào mới hỏng (`5 regression ✅`) |
 
 ---
 

@@ -76,14 +76,32 @@ def _approval_problem(ctx, action, order, policy):
     return None
 
 
+def _auto_rows_today(ctx):
+    """Các dòng hoàn TỰ ĐỘNG (không có approval_id) được ghi trong ngày hôm nay.
+
+    ledger_rows() trả cả sổ cái cũ (ledger_seed, các ngày trước). Sổ cái chỉ ghi nối vào cuối, nên các dòng của hôm
+    nay nằm ở cuối danh sách. Đi ngược từ cuối, cộng dồn dòng tự động cho tới khi bằng auto_refund_today_vnd()
+    (tổng hoàn tự động hôm nay do host tính); mọi khoản hoàn đều > 0 nên điểm cắt là duy nhất.
+    """
+    target = ctx.tools.auto_refund_today_vnd()
+    today, acc = [], 0
+    for row in reversed(ctx.tools.ledger_rows()):
+        if acc >= target:
+            break
+        if row.get("approval_id"):
+            continue
+        today.append(row)
+        acc += row.get("amount_vnd") or 0
+    return today if acc == target else [r for r in ctx.tools.ledger_rows() if not r.get("approval_id")]
+
+
 def _customer_refund_cap_problem(ctx, action, order):
     cap = ctx.tools.ops_limits().get("max_auto_refund_per_customer_per_day_vnd")
     if cap is None or action.get("approval_id"):
         return None
 
     customer_id = order.get("customer_id")
-    spent = sum(row["amount_vnd"] for row in ctx.tools.ledger_rows(customer_id=customer_id)
-                if not row.get("approval_id"))
+    spent = sum(row["amount_vnd"] for row in _auto_rows_today(ctx) if row.get("customer_id") == customer_id)
     amount = action["amount_vnd"]
     if spent + amount > cap:
         ctx.log("customer_refund_cap", customer_id=customer_id, spent_vnd=spent,
