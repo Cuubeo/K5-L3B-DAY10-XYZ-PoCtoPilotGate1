@@ -1,0 +1,3 @@
+* text=auto eol=lf
+config/acceptance_criteria.json text eol=crlf
+lab10/guards_round1.py text eol=crlf
