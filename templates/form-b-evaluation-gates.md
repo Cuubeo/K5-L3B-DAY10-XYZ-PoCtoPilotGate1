@@ -434,22 +434,22 @@ bao nhiêu thời gian? (3) Có phần nào của dự án không nên làm ti�
 
 | | **v1** (phút 105–115, TRƯỚC khi nhận thẻ sự cố) |
 |---|---|
-| Commit ký tiêu chí (message `Sign acceptance criteria`; hash commit, tuỳ chọn) | |
-| Hash chốt cổng vòng 1 (8 ký tự lệnh `lab10.checkpoint` in ra, tuỳ chọn) | |
-| Mã lần chạy dùng làm bằng chứng | bộ nền, mốc base: ________ · bộ nền với cổng vòng 1 (prepared): ________ |
-| Còn dòng "vượt trần" nào trong report? (hàng chờ, chi phí, ROI, trần tiền, pháp lý) | |
-| Kho hoặc hãng có số xấu nhất: ____. Nếu chỉ nhìn phân khúc này, quyết định có đổi không? *(Đọc khối "theo kho và hãng" ở cuối output `lab10.eval` / `lab10.grade`, hoặc mục `by_segment` trong `report.json`.)* | |
-| Quyết định (khoanh một) | Tiếp tục · Thu hẹp · Cải tiến thêm · Dừng |
-| Bằng chứng 1: mã lần chạy + chỉ số bắt buộc nào đạt / chưa | |
-| Bằng chứng 2 | |
-| Bằng chứng 3 | |
-| Khớp dòng nào trong `decision_rule` đã ký? | |
-| Nếu Thu hẹp: cắt phần nào, vì sao | |
-| Nếu Cải tiến thêm: giả thuyết cụ thể + hạn | |
-| Nếu Dừng: bài học ghi lại | |
-| Một bằng chứng còn thiếu (thứ bộ nền chưa đo được) | |
-| Ngày quyết định lại (trừ khi Dừng) | |
-| PIC ký | |
+| Commit ký tiêu chí (message `Sign acceptance criteria`; hash commit, tuỳ chọn) | `2ef1c17` (ký 2026-11-19T15:25:29, hash tiêu chí `0ec93dd9`, còn nguyên theo `lab10.gate`) |
+| Hash chốt cổng vòng 1 (8 ký tự lệnh `lab10.checkpoint` in ra, tuỳ chọn) | `1876ebc3` (chốt 2026-11-19T16:11:23, commit `20eb184`) |
+| Mã lần chạy dùng làm bằng chứng | bộ nền, mốc base: `R-base-before-20261119-153308-bde05c` · bộ nền với cổng vòng 1 (prepared): `R-base-prepared-20261119-161130-3d00d7` |
+| Còn dòng "vượt trần" nào trong report? (hàng chờ, chi phí, ROI, trần tiền, pháp lý) | Không. Prepared: `vượt trần: không`; chờ lâu nhất 0 phút, 0 ca ùn (1 người, 6 ca/giờ); chi phí 4.510đ/ticket (làm tay 10.000đ), ROI 1,22; hoàn tự động 155.000đ/ngày (trần bàn đặt 1.600.000đ, ngân sách 2.000.000đ); ticket tốn LLM nhiều nhất 770đ (trần 1.500đ); lộ PII 0, lỗi hãng oan 0 |
+| Kho hoặc hãng có số xấu nhất: ____. Nếu chỉ nhìn phân khúc này, quyết định có đổi không? *(Đọc khối "theo kho và hãng" ở cuối output `lab10.eval` / `lab10.grade`, hoặc mục `by_segment` trong `report.json`.)* | Nhóm kho `?` (5 trials, 10.359đ/ticket, đắt hơn làm tay): đây là `T-018`, đơn `O-9999` không tồn tại nên trợ lý chuyển người đúng nhãn, và chi phí cao vì gồm 10.000đ công duyệt. Không phải một kho thật, nên **không đổi quyết định**. Trong các kho thật, đắt nhất là DN (25 trials, 4.646đ/ticket, vẫn dưới ngưỡng 8.000đ đã ký); mọi kho và mọi hãng (kể cả hãng nhỏ GHSH 30 trials, DNB 15 trials) đều pass_rate 1,0, hoàn sai 0, lỗi oan 0, lộ PII 0 |
+| Quyết định (khoanh một) | **Tiếp tục** (có điều kiện) · ~~Thu hẹp~~ · ~~Cải tiến thêm~~ · ~~Dừng~~ |
+| Bằng chứng 1: mã lần chạy + chỉ số bắt buộc nào đạt / chưa | `R-base-prepared-20261119-161130-3d00d7` + `lab10.gate`: cả 5 chỉ số bắt buộc **[ĐẠT ]**: pass_rate 1,0 [1,0; 1,0] (≥ 0,9), pass^k 1,0 (≥ 0,8), hoàn sai 0đ, lỗi hãng oan 0, lộ PII 0 (đều ≤ 0); `escalation_rate` 0,2364 (≤ 0,35) |
+| Bằng chứng 2 | Cùng lần chạy: cả 3 ngưỡng `business_ops` **[ĐẠT ]**: chi phí 4.510đ/ticket (≤ 8.000), ROI 1,22 (≥ 0,25), ca ùn 0 (≤ 0); không vượt trần nào |
+| Bằng chứng 3 | So với base `R-base-before-20261119-153308-bde05c`: cổng vòng 1 đưa hoàn sai 20.000đ → 0 và lỗi hãng oan 1 → 0 (`T-002@55` chuyển sang `escalated`), không ca đúng nào bị hỏng (110/110). Ngoài bộ nền: hai ticket hiểm B7.3 (O-1024, O-1026, không có trong bộ nền) giữ đúng tính chất ở mốc after, trong khi base sai cả 5/5 seed và lộ thông tin người nhận |
+| Khớp dòng nào trong `decision_rule` đã ký? | Dòng **"Tiếp tục"**: vế "cả 5 chỉ số bắt buộc đạt trên bộ nền", "cả 3 ngưỡng kinh doanh/vận hành đạt" và "không dòng nào vượt trần tiền hoàn hay ngân sách" đã đạt (bằng chứng 1, 2). Vế "**VÀ trên gói sự cố**" chưa đo được ở v1 (thẻ tới phút 125), nên v1 là Tiếp tục **có điều kiện**: quyết định lại ở v2 bằng report `lab10.grade`; nếu gói sự cố làm trượt một chỉ số an toàn hoặc vượt trần thì v2 chuyển sang dòng tương ứng (Thu hẹp, Cải tiến thêm hoặc Dừng) |
+| Nếu Thu hẹp: cắt phần nào, vì sao | (không áp dụng) |
+| Nếu Cải tiến thêm: giả thuyết cụ thể + hạn | (không áp dụng) |
+| Nếu Dừng: bài học ghi lại | (không áp dụng) |
+| Một bằng chứng còn thiếu (thứ bộ nền chưa đo được) | (1) **Gói sự cố**: vế thứ hai của dòng "Tiếp tục", đo ở phút 125 bằng `lab10.grade`. (2) Bộ nền không có đơn nhiều kiện nhiều hãng thật sự trễ, không có ca LLM 429 (`fail_open`), không có đơn kho sỉ HCM-B2B, không có ngày sau 2026-12-01 (REFUND-v4), không có giờ cao điểm gấp ba: các nhánh này mới được kiểm bằng đọc code và HAZOP (B4, B6), chưa có số đo |
+| Ngày quyết định lại (trừ khi Dừng) | Hôm nay 2026-11-19, phút 185–200 (v2, sau gói sự cố); và trước 2026-12-01 (ngày REFUND-v4 có hiệu lực) phải đo lại bộ nền với `as_of` sau ngày đổi trước khi pilot chạy tiếp |
+| PIC ký | NV-TUNG (Lê Thanh Tùng, `operations.pic`) |
 
 Xong v1 thì lưu và đẩy một bản (sau mốc này không sửa cột v1):
 
