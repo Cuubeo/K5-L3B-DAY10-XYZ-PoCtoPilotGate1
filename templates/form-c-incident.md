@@ -257,9 +257,14 @@ Kiểm bằng gì (hàm trong `guards.py`, dòng report nào): …
 
 ### Câu 3.3 · Một giả định về môi trường mà người thiết kế đã ngầm tin, nhưng nhiều khả năng sai ngoài thực tế
 
-Giả định (thứ nằm NGOÀI phần mềm): …
+Giả định (thứ nằm NGOÀI phần mềm): Người thiết kế ngầm tin rằng **mã phê duyệt nào tìm thấy trong bảng `approvals` theo đơn hoặc theo khách thì cũng là phê duyệt của trưởng ca cho chính yêu cầu đang xử lý, và vẫn còn hiệu lực**. Tức là ngoài đời mỗi khách hay mỗi đơn chỉ có một yêu cầu bồi thường, mỗi mã duyệt chỉ được cấp cho đúng một ticket, và trạng thái của mã (đã dùng, hết hạn, bị thu hồi, hạn mức) luôn được người duyệt cập nhật kịp thời trước khi trợ lý tra tới. Đi kèm là giả định thứ hai: nhân viên CSKH sẽ tin quyết định tự động chỉ vì nó có gắn mã duyệt, nên không cần ghi chú giải thích.
 
-Vì sao có thể sai: …
+Vì sao có thể sai:
+- **Một khách, một đơn có nhiều yêu cầu theo thời gian.** C-08 có mã `A-2801` cấp cho yêu cầu cũ `T-OLD-2801` (đã `used`), và trợ lý dùng lại mã đó cho yêu cầu mới `S8-01` (`S8-01@11`: `approval_used A-2801`, chi 230.000đ). C-11 có `A-2804` cấp cho `T-OLD-2808` (đơn O-2808) nhưng trợ lý tìm theo khách và gắn nó vào đơn O-2804.
+- **Mã duyệt có vòng đời ngoài phần mềm.** Trưởng ca cấp mã theo hạn (`A-2802` hết hạn 2026-11-10), thu hồi khi đổi ý (`A-2806` `revoked`), và đặt hạn mức theo từng ca (`A-2803` chỉ 150.000đ nhưng khoản chi 235.000đ). Ngoài đời việc thu hồi hay hết hạn thường được báo miệng hoặc cập nhật chậm, nên bảng `approvals` có thể còn mã "trông như hợp lệ".
+- **Người đứng tên chịu trách nhiệm pháp lý, nên lòng tin của họ không tự có.** Theo `staff_behavior.trust_conditions` trong `incidents/S8/world_patch.json`, nhân viên chỉ thôi kiểm tay khi có ghi chú giải thích, kiểm mẫu ≥ 10%, người duyệt là NV-HANH và **trong ngày không còn khoản nào dùng phê duyệt không hợp lệ**. Chỉ một khoản sai là đủ để cả ca quay về kiểm 100% (`recheck_auto_decisions_pct` = 100), như tin nhắn của chị Hạnh ngày 16/11.
+
+Hệ quả cần kiểm trong pilot thật: đo tỉ lệ ticket mà mã duyệt tìm được không khớp `ticket_id`, hết hạn hoặc bị thu hồi; và đo thời gian từ lúc trưởng ca thu hồi mã tới lúc bảng `approvals` cập nhật.
 
 ---
 
