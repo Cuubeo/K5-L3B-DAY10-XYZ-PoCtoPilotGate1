@@ -29,8 +29,8 @@ Mọi con số trong quyết định Gate 1 phải trỏ về một dòng ở đ
 
 | # | Mã lần chạy | Bộ ticket · mốc | Đổi MỘT thứ gì so với lần trước | pass_rate (khoảng tin cậy 95%) | pass_k | Hoàn sai (đ) · lỗi hãng oan · lộ dữ liệu | Tỉ lệ chuyển người | Kết luận (một câu) |
 |---|---|---|---|---|---|---|---|---|
-| 1 | | base · base | (baseline, chưa có cổng) | | | | | |
-| 2 | | base · after | (cổng vòng 1, thử trước khi chốt) | | | | | |
+| 1 | `R-base-before-20261119-153308-bde05c` | base · base | (baseline, chưa có cổng) | 0.9909 [0.9727; 1.0] | 0.9545 | 20.000 · 1 · 0 | 0.2273 | Hoàn sai và lỗi hãng oan đều vượt ngưỡng 0; kho HCM và hãng VNX xấu nhất. |
+| 2 | `R-base-after-20261119-153706-d8d320` | base · after | (thêm cổng đối chiếu tracking và chính sách trước khi ghi) | 1.0 [1.0; 1.0] | 1.0 | 0 · 0 · 0 | 0.2364 | Cả 110/110 lượt đạt; các ngưỡng bắt buộc và kinh doanh/vận hành đều đạt. |
 | 3 | | base · prepared | (cổng vòng 1 đã chốt) | | | | | |
 | 4 | | | | | | | | |
 
@@ -45,18 +45,18 @@ python3 -m lab10.eval --suite base --stage base --note "baseline"
 python3 -m lab10.gate --run runs/<mã lần chạy>/report.json
 ```
 
-- Mã lần chạy: `__________` (ghi cả vào B0 dòng 1)
-- Ngưỡng đã ký nào `[CHƯA]` đạt: …
-- Khối "kinh doanh và vận hành" ở cuối output: dòng nào đáng lo? …
-- Khối "theo kho và hãng": kho hoặc hãng nào có số xấu nhất? …
+- Mã lần chạy: `R-base-before-20261119-153308-bde05c` (ghi cả vào B0 dòng 1)
+- Ngưỡng đã ký nào `[CHƯA]` đạt: `wrongful_refund_vnd ≤ 0` (thực tế 20.000đ) và `wrongful_carrier_faults ≤ 0` (thực tế 1).
+- Khối "kinh doanh và vận hành" ở cuối output: dòng nào đáng lo? Có 5 ca/ngày vào hàng chờ; chi phí 4.203đ/ticket, ROI 1,34, 0 ca ùn và chưa vượt ngân sách nên các số này chưa đáng lo. Đáng lo là hoàn sai ngày tệ nhất 20.000đ.
+- Khối "theo kho và hãng": kho HCM xấu nhất (20.000đ hoàn sai, 1 lỗi hãng oan); hãng VNX có cùng hai lỗi.
 
 **Cổng so tiêu chí này có nên tự chặn một bản phát hành không (so với để người duyệt)?**
 
 | Lý lẽ ủng hộ tự chặn | Lý lẽ phản đối |
 |---|---|
-| | |
+| Cả hoàn sai lẫn lỗi hãng oan đều là ngưỡng an toàn bắt buộc bằng 0; một lỗi có thể gây thiệt hại tài chính và ảnh hưởng bên thứ ba. | Một report hữu hạn có thể có nhiễu hoặc thiếu ngữ cảnh; người duyệt cần xem trace, phân khúc và mức độ rủi ro trước khi quyết định triển khai hay thu hẹp. |
 
-Khuyến nghị (khoanh một): **tự chặn · người duyệt · kết hợp**. Vì: …
+Khuyến nghị (khoanh một): **kết hợp**. Vì: tự động chặn phát hành khi chỉ số an toàn bắt buộc chưa đạt; người chịu trách nhiệm xem trace và chọn sửa, thu hẹp hoặc dừng, không để công cụ tự quyết định thay đội.
 
 ---
 
