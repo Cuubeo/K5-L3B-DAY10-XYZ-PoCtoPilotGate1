@@ -24,8 +24,8 @@ rồi mới chạy đánh giá. Khối 1 không sửa code.
 
 ### Câu 1.2 · Mục tiêu nhìn từ hai người
 
-- Chị Oanh, kế toán đối soát (không dùng trợ lý, nhưng phải khớp sổ với hãng và shop mỗi tuần): …
-- Chị Hạnh, trưởng ca CSKH (phải duyệt những ca trợ lý chuyển sang): …
+- Chị Oanh, kế toán đối soát (không dùng trợ lý, nhưng phải khớp sổ với hãng và shop mỗi tuần): Cuối mỗi tuần, mọi khoản trợ lý đã hoàn và mọi lỗi đã ghi cho hãng đều khớp được với sổ cái và tracking: không có lỗi nào ghi cho hãng khi `delay_cause` không thuộc `fault_causes` của chính sách đang hiệu lực, không có khoản nào ghi sai người trả (`payer`, trừ nhầm shop), để chị đối soát xong mà không phải gỡ khiếu nại của hãng hay shop.
+- Chị Hạnh, trưởng ca CSKH (phải duyệt những ca trợ lý chuyển sang): Số ca trợ lý chuyển sang không vượt sức người trực (6 ca/giờ/người theo `ops_facts`), mọi ca được nhận trong 60 phút (`review_sla_minutes`) và mỗi ca kèm lý do chuyển cùng số liệu đã tra, để chị duyệt nhanh mà không phải tra lại từ đầu.
 
 ---
 
@@ -48,12 +48,12 @@ trợ lý có đang gây thiệt hại cho bên ngoài LogiX không; không có 
 
 | | Offline, cho MỘT bước (câu 1.3) | Telemetry production (câu 1.4) |
 |---|---|---|
-| **Bước / hành vi được đo** | | |
-| **Thước đo** (một câu, có đơn vị) | | |
-| **Dữ liệu** (lấy ở đâu, bao nhiêu, ai gán nhãn) | | |
-| **Cách tính** (công thức, mẫu số, cách xử lý ca thiếu dữ liệu) | | |
-| **Khung thời gian / ngưỡng báo động** | (không áp dụng) | |
-| **Điểm mù** (thước đo này KHÔNG thấy gì) | | |
+| **Bước / hành vi được đo** | Đọc ticket và trích xuất hãng vận chuyển, kho, số tiền, thời gian giao và lý do khiếu nại. | Lệnh ghi `file_carrier_fault` (trợ lý ghi lỗi cho hãng vận chuyển). Bên chịu thiệt ngoài LogiX: hãng nhỏ (GHSH, DNB bị đình chỉ sau 3 lỗi/7 ngày) |
+| **Thước đo** (một câu, có đơn vị) | Tỉ lệ ticket agent trích xuất đúng toàn bộ dữ kiện bắt buộc (%). | (1) Số lỗi tự động ghi cho mỗi hãng trong ngày (lỗi/hãng/ngày) · (2) Tỉ lệ lỗi tự động bị gỡ: hãng khiếu nại thành công hoặc kế toán gỡ khi đối soát (%, cửa sổ 7 ngày) |
+| **Dữ liệu** (lấy ở đâu, bao nhiêu, ai gán nhãn) | Ticket offline và nhãn đúng/sai do nhân viên vận hành gán. Dùng ít nhất 22 ticket × 5 seed. | Sổ lỗi hãng (`fault_rows`: carrier_id, parcel_id, ngày), tracking (`delay_cause`), phiếu khiếu nại của hãng, biên bản đối soát tuần của chị Oanh (NV-OANH). Không có nhãn đúng/sai: dùng "lỗi bị gỡ" làm tín hiệu thay nhãn, có trễ tối đa 7 ngày |
+| **Cách tính** (công thức, mẫu số, cách xử lý ca thiếu dữ liệu) | Số ticket trích xuất đúng ÷ tổng ticket có nhãn × 100%. Ticket thiếu dữ kiện gốc loại khỏi mẫu số; bỏ sót dữ kiện vẫn tính sai. | (1) Đếm fault theo `carrier_id` theo ngày, chỉ tính lỗi do trợ lý tự ghi. (2) Số lỗi bị gỡ ÷ tổng lỗi tự động trong 7 ngày gần nhất. Lỗi chưa đối soát xong không vào mẫu số, đếm riêng thành "chờ đối soát"; lỗi thiếu `delay_cause` trong tracking đếm thẳng vào nhóm nghi oan |
+| **Khung thời gian / ngưỡng báo động** | (không áp dụng) | Theo ngày: hãng nào có lỗi tự động thứ 3 → báo động (vượt `max_auto_strikes_per_carrier_per_day` = 2). Theo 7 ngày: hãng có `suspend_after_strikes_7d` = 3 chạm 2 lỗi → cảnh báo trước khi bị đình chỉ; tỉ lệ bị gỡ > 0 → báo động. Báo về kênh của NV-TUNG (giữ công tắc tắt `file_carrier_fault`) |
+| **Điểm mù** (thước đo này KHÔNG thấy gì) | Không phát hiện agent hiểu sai chính sách sau khi đã đọc ticket. | Lỗi oan mà hãng không khiếu nại (hãng nhỏ ít khi cãi) thì không bị gỡ, nên không hiện ra. Không thấy lộ dữ liệu cá nhân trong tin `notify_carrier`, hoàn tiền sai cho khách, hay trường hợp chính tracking ghi sai `delay_cause` |
 
 **Ví dụ mẫu (bước "chọn độ trễ" của agent, đừng chép):**
 Thước đo: tỉ lệ lần chạy mà độ trễ agent dùng để tính tiền khác độ trễ theo tracking DB. Dữ liệu: sự kiện `proposal.delay_days_used`
