@@ -1,6 +1,6 @@
 # Phiếu C · Sự cố và quyết định v2 · Khối 3 (phút 125–200)
 
-**Bàn:** ______ · **Thẻ đã bốc:** ___ *(để trống tới phút 125; bốc số xong thì ghi đúng số đó, ví dụ `S3`. Lab Coach đối chiếu với sổ; lệnh tự kiểm tra in dòng này trong report.)*
+**Bàn:** K5-L3B-DAY10-XYZ-PoCtoPilotGate1 · **Thẻ đã bốc:** S8 *(để trống tới phút 125; bốc số xong thì ghi đúng số đó, ví dụ `S3`. Lab Coach đối chiếu với sổ; lệnh tự kiểm tra in dòng này trong report.)*
 
 Mở `incidents/Sx/card.md` của đúng số đã bốc. Các bước trên thẻ trỏ về đúng mục trong phiếu này. Mục C3 chỉ điền phần ứng với
 số thẻ của bàn; các phần khác để trống.
@@ -30,7 +30,7 @@ Mỗi lệnh `lab10.eval` và `lab10.grade` tự ghi một dòng vào `runs/jour
 
 | # | Mã lần chạy | Bộ ticket · mốc | Đổi MỘT thứ gì so với lần trước | pass_rate (khoảng tin cậy 95%) | pass_k | Hoàn sai (đ) · lỗi hãng oan · lộ dữ liệu | Tỉ lệ chuyển người | Kết luận (một câu) |
 |---|---|---|---|---|---|---|---|---|
-| 1 | | Sx · prepared | nhận thẻ đã bốc, chưa sửa thêm (đúng cổng vòng 1 đã chốt) | | | | | |
+| 1 | `R-S8-prepared-20261119-162602-aa8f8b` (grade `R-S8-grade-20261119-162600-aa8f8b`) | S8 · prepared | nhận thẻ đã bốc, chưa sửa thêm (đúng cổng vòng 1 đã chốt) | 0.8654 [0.7692; 0.9423] | 0.8654 | 6.845.000 · 35 · 0 | 0.0 (nhưng nhân viên kiểm lại 100% quyết định tự động) | Cổng vòng 1 không đỡ được gì: prepared trùng hệt base; hàng chờ 36 ca ùn, chờ lâu nhất 216 phút, chi phí 11.325đ/ticket > làm tay, ROI −2,44 |
 | 2 | | Sx · after | | | | | | |
 | 3 | | Sx · after | | | | | | |
 | 4 | | base · after | (kiểm không regression) | | | | | |
@@ -47,19 +47,21 @@ Chạy **trước khi sửa bất cứ thứ gì**:
 python3 -m lab10.grade --incident Sx
 ```
 
-- Mã lần chạy grade: `__________` · base: `__________` · prepared: `__________`
-- Cổng vòng 1 đỡ được ô / con số nào (so cột base với cột prepared): …
-- Khối kinh doanh và vận hành còn dòng nào vượt trần: …
+- Mã lần chạy grade: `R-S8-grade-20261119-162600-aa8f8b` · base: `R-S8-before-20261119-162602-aa8f8b` · prepared: `R-S8-prepared-20261119-162602-aa8f8b`
+  *(Lần grade đầu `R-S8-grade-20261119-162243-3d00d7` báo `1 integrity ❌` do máy Windows đổi kiểu xuống dòng của file khoá; đã cố định bằng `.gitattributes`, nội dung file không đổi. Lần grade trên chạy lại khi chưa sửa gì: `1 integrity ✅`, `2 criteria ✅`.)*
+- Cổng vòng 1 đỡ được ô / con số nào (so cột base với cột prepared): **Không ô nào trên gói S8.** pass_rate 0,8654 → 0,8654, hoàn sai 6.845.000đ → 6.845.000đ, lỗi hãng oan 35 → 35, chờ lâu nhất 216 → 216 phút, ca ùn 36 → 36. Chỉ đổi phía chi phí: 11.225đ → 11.325đ/ticket, do `decision_note` thêm 100đ LLM. Trên bộ nền cổng vòng 1 vẫn giữ: hoàn sai 20.000đ → 0, lỗi hãng oan 1 → 0, `5 regression ✅`. Phần cấu hình vòng 1 đã đáp ứng 3/4 điều kiện để nhân viên thôi kiểm tay (`decision_note` = true, kiểm mẫu 10%, `approver_id` = NV-HANH), nhưng report vẫn ghi "Niềm tin của nhân viên duyệt: **chưa đạt** · còn thiếu: trong ngày vẫn có khoản hoàn dùng phê duyệt không hợp lệ", nên nhân viên vẫn kiểm lại 100%.
+- Khối kinh doanh và vận hành còn dòng nào vượt trần: hàng chờ **36 ca bị ùn**; chờ lâu nhất **216 phút** > 60 phút; chi phí **11.325đ/ticket** > làm tay 10.000đ; **ROI −2,44** < 0,25; cả 4 kho CT, DN, HCM, HN đều đắt hơn làm tay (≈ 10.750đ/ticket); tiết kiệm ròng −1.437.921đ/ngày. Ngưỡng đã ký chưa đạt: pass_rate, wrongful_refund_vnd, wrongful_carrier_faults, cost_per_ticket_vnd, roi, queue_stuck. Report kết luận: **KHÔNG đủ căn cứ để chọn "Tiếp tục"**.
 
 **Mở lại pre-mortem (Phiếu B mục B6), viết bằng bút khác màu.** Với thẻ S1, S3, S4, S5 đây là một phần của phần riêng theo thẻ.
 
-- Sự cố trên thẻ thuộc lăng kính nào (kỹ thuật, kinh doanh, con người và vận hành, pháp lý)? …
-- Có nằm trong các lý do bàn đã viết không? Nếu có: cổng vòng 1 đã đỡ được bao nhiêu (đọc cột prepared trong report)? Nếu không: vì sao cả bàn không nghĩ tới? …
+- Sự cố trên thẻ thuộc lăng kính nào (kỹ thuật, kinh doanh, con người và vận hành, pháp lý)? Chính là **con người và vận hành** (trưởng ca không tin trợ lý, cả ca kiểm tay, hàng chờ ngập). Kéo theo **kinh doanh** (chi phí cao hơn làm tay, ROI âm) và **pháp lý** (NV-HANH bị ghi là người duyệt những khoản chị không duyệt). Gốc kỹ thuật cần dò: trợ lý dùng mã phê duyệt sai (sự kiện `approval_used`).
+- Có nằm trong các lý do bàn đã viết không? Nếu có: cổng vòng 1 đã đỡ được bao nhiêu (đọc cột prepared trong report)? Nếu không: vì sao cả bàn không nghĩ tới? **Có một nửa.** B6 có dòng "Nhân viên CSKH không tin trợ lý, tự kiểm lại 100% quyết định bằng tay" và bàn đã đặt sẵn `decision_note`, kiểm mẫu 10%, `approver_id` = NV-HANH, nhưng xếp phần còn lại vào risk register. Cổng vòng 1 **không đỡ được con số nào** ở cột prepared. Bàn **không nghĩ tới** nguyên nhân khiến mất niềm tin: trợ lý tự dùng mã phê duyệt không hợp lệ (của ticket khác, hết hạn, đã thu hồi, vượt hạn mức). HAZOP B4 làm trên `file_carrier_fault`, không làm trên bước "tìm phê duyệt"; `write_gate` của bàn chỉ kiểm số tiền so với quyền lợi, không kiểm `approval_id`.
 - Lý do còn thiếu, thêm bây giờ:
 
 | Lý do thất bại (viết ở thì quá khứ) | Lăng kính | Kiểm được bằng gì (trace / data / config nào) |
 |---|---|---|
-| | | |
+| Trợ lý đã lấy đại một mã phê duyệt tìm được theo đơn hoặc theo khách (của ticket khác, hết hạn, đã thu hồi, hạn mức thấp hơn số tiền) để chi khoản trên 200.000đ; kiểm toán ghi NV-HANH là người duyệt | Kỹ thuật · Pháp lý | Trace sự kiện `approval_used` đối chiếu bảng `approvals` (`ticket_id`, `max_vnd`, `expires_at`, `status`) trong `incidents/S8/world_patch.json`; `lab10/agent.py` bước 5 lấy `cands[0]` |
+| Nhân viên mất tin nên kiểm tay 100%: hàng chờ một người duyệt ngập (36 ca ùn, chờ 216 phút), chi phí cao hơn làm tay, pilot lỗ | Con người và vận hành · Kinh doanh | Report grade S8 khối kinh doanh và vận hành; `staff_behavior.recheck_auto_decisions_pct` và `trust_conditions` trong `world_patch.json` |
 
 ---
 
