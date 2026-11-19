@@ -34,6 +34,7 @@ Mọi con số trong quyết định Gate 1 phải trỏ về một dòng ở đ
 | 3 | | base · prepared | (cổng vòng 1 đã chốt) | | | | | |
 | 4 | `R-base-after-20261119-155123-75b8eb` | base · after | Điền `operations` + `legal` trong `config/operating_gates.json` (PIC, người duyệt, ghi chú quyết định, kiểm mẫu 10%, chặn PII, lỗi hãng phải có nguyên nhân) | 1.0 [1.0; 1.0] | 1.0 | 0 · 0 · 0 | 0.2364 (vào hàng chờ 0.2727 kể cả kiểm mẫu) | Không ca nào hỏng; chi phí lên 4.510đ/ticket, ROI 1,22, 0 ca ùn: cổng vận hành và pháp lý không làm xấu số |
 | 5 | `R-base-after-20261119-155511-44331d` | base · after | Thử giờ cao điểm: `reviewers_on_shift` 1 → 2, `review_capacity_per_hour` 6 → 12 (đã trả về 1 và 6 sau khi đo) | 1.0 [1.0; 1.0] | 1.0 | 0 · 0 · 0 | 0.2364 (vào hàng chờ 0.2727) | Thêm 1 người: chi phí 4.510 → 5.874đ/ticket, ROI 1,22 → 0,70; vẫn đạt ngưỡng đã ký, chỉ gọi thêm người khi chạm ngưỡng giờ cao điểm |
+| 6 | `R-base-after-20261119-160615-3d00d7` | base · after | Thêm `pre_guard` ghim chính sách theo ngày hiệu lực (`H.effective_policy`) | 1.0 [1.0; 1.0] | 1.0 | 0 · 0 · 0 | 0.2364 | Không ca nào hỏng; trace cho thấy chính sách đã được ghim (`pinned: true`), sẵn sàng cho ngày đổi sang v4 |
 
 ---
 
@@ -285,9 +286,9 @@ python3 -m unittest discover -s tests
 
 | # | Cổng (hàm và nhánh, ví dụ `write_gate` khi `tool == "issue_refund"`) | Ứng với dòng nào ở B6 / B4 | Chặn điều gì, dựa vào nguồn sự thật nào | Mã lần chạy `base · after` | Ca đang đúng nào bị hỏng? (phải là "không") |
 |---|---|---|---|---|---|
-| 1 | | | | | |
-| 2 | | | | | |
-| 3 | | | | | |
+| 1 | `write_gate` khi `tool == "issue_refund"`: (a) `order_id` phải khớp ticket, tra được đơn và chính sách hiệu lực; (b) `delay_days_used` của `proposal` phải bằng `H.db_delay_days` của kiện; (c) `amount_vnd` ≤ `H.entitlement_vnd`; (d) nếu `do_fault` thì `H.carrier_at_fault` phải đúng. Sai bất kỳ điều nào thì `escalate` | B6 [CỔNG 1] (model tin số ngày khách tự khai); B4 dòng PERTURBED (`delay_days`); B2 lỗi 1 (`T-002@55`) | Chặn hoàn tiền theo số ngày khách tự khai hoặc vượt quyền lợi. Nguồn sự thật: tracking (`promised_date`, `delivered_date`, `delay_cause`) và chính sách theo ngày hiệu lực | `R-base-after-20261119-153706-d8d320` (base `R-base-before-20261119-153308-bde05c`: hoàn sai 20.000đ → 0) | Không: 110/110 đạt; tỉ lệ chuyển người 0,2273 → 0,2364 (thêm ca `T-002@55` chuyển người duyệt, đúng nhãn `alt_escalate`) |
+| 2 | `write_gate` khi `tool == "file_carrier_fault"`: kiện `parcel_id` phải có trong tracking; `carrier_id` phải khớp hãng của kiện; `delay_days` phải bằng `H.db_delay_days`; `H.carrier_at_fault(policy, parcel, delay)` phải đúng. Sai thì `escalate` | B4 dòng WRONG (`carrier_id` lấy từ `parcels[0]`) và INCOMPLETE (`delay_cause` trống); B6 dòng "ghi lỗi cho hãng của kiện đầu tiên" | Chặn ghi lỗi oan cho hãng: sai hãng, sai số ngày, hoặc nguyên nhân không thuộc `fault_causes`. Nguồn sự thật: `orders[].parcels` (tracking) và `policies[].fault_causes` | `R-base-after-20261119-153706-d8d320` (base: 1 lỗi hãng oan cho VNX → 0) | Không: 110/110 đạt, lỗi hãng oan 0 cho cả GHSH, DNB, MKD, VNX, LGX |
+| 3 | `pre_guard`: ghim `policy_id` bằng `H.effective_policy(lookup_policies(), ctx.as_of)`; không có chính sách hiệu lực thì `escalate` | B4 dòng INVALID (`policy` → `fault_causes`); B6 dòng "đổi sang REFUND-v4 ngày 01/12"; drift ở B3 | Chặn việc agent chọn chính sách theo cờ `index_active` thay vì ngày hiệu lực (v3 tới 2026-11-30, v4 từ 2026-12-01). Nguồn sự thật: `policies[].effective_from/effective_to` | `R-base-after-20261119-160615-3d00d7` (trace `T-001@11`: `03 policy {"policy_id": "REFUND-v3", "pinned": true}`) | Không: 110/110 đạt, hoàn sai 0 · lỗi hãng oan 0 · lộ PII 0, chi phí 4.510đ/ticket, ROI 1,22 như trước |
 
 ### B7.2 · Câu 2.7 · Hai bước tránh rò rỉ dữ liệu
 

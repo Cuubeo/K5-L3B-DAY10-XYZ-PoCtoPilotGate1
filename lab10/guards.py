@@ -34,7 +34,13 @@ from .tools import Verdict
 
 
 def pre_guard(ctx):
-    return Verdict.allow()
+    # Cổng vòng 1 (HAZOP B4 dòng INVALID, drift B3): agent tự chọn chính sách theo cờ index_active, có thể lệch
+    # ngày hiệu lực (v3 hết 2026-11-30, v4 từ 2026-12-01). Ghim phiên bản theo ngày hôm nay từ nguồn sự thật.
+    policy = H.effective_policy(ctx.tools.lookup_policies(), ctx.as_of)
+    if policy is None:
+        ctx.log("no_effective_policy", as_of=ctx.as_of)
+        return Verdict.escalate("không có chính sách hoàn tiền nào hiệu lực vào ngày này; chuyển người duyệt")
+    return Verdict.allow(policy_id=policy["policy_id"])
 
 
 def write_gate(ctx, action):
