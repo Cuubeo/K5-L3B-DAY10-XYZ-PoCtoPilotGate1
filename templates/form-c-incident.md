@@ -342,8 +342,8 @@ python3 -m lab10.grade --incident Sx
 | Nhánh fault tree | Nguyên nhân | Chỗ sửa (hàm + nhánh trong `guards.py`, hoặc khoá trong `operating_gates.json`) | Tầng (phát hiện / chặn / giới hạn thiệt hại / vận hành) | GIẢM khả năng hay NGĂN hẳn? Vì sao | Mã lần chạy sau khi sửa |
 |---|---|---|---|---|---|
 | [1] | Agent lấy mã duyệt đầu tiên theo đơn/khách, không kiểm đúng ticket, đơn, khách, người duyệt, trạng thái, ngày hết hạn hay số tiền tối đa. | `write_gate` → `_approval_problem`: chỉ cho ghi khi có đúng một bản ghi và mọi trường khớp; khoản vượt `auto_limit_vnd` thiếu mã duyệt thì chuyển người. | Chặn trước `issue_refund` | Ngăn ghi khoản dựa trên phê duyệt không hợp lệ; không bảo đảm nguồn phê duyệt bên ngoài nhập đúng. | `R-S8-after-20261119-164346-42c94d` |
-| [2] Các đơn S8-40–42 hoàn tự động tổng 282.000đ cho cùng khách; S8-43/44 sẽ làm vượt trần 300.000đ/ngày. | `write_gate` → `_customer_refund_cap_problem`, dùng `ops_limits.max_auto_refund_per_customer_per_day_vnd`; vượt trần thì chuyển người. | Chặn trước `issue_refund` | Ngăn khoản tự động làm tổng vượt trần; không chặn hoàn đã có phê duyệt hợp lệ. | `R-S8-after-20261119-164617-c4869d` |
-| [3] Sau khi không còn phê duyệt sai, nhân viên vẫn cần lý do và quyền kiểm mẫu để thôi kiểm tay toàn bộ quyết định. | `config/operating_gates.json` đã có `approver_id=NV-HANH`, `decision_note=true`, `review_sampling_pct=10`; giữ nguyên vì khớp điều kiện trust của thẻ. | Vận hành | Giảm kiểm tay nhờ giải thích và kiểm mẫu; đây không phải cổng bảo đảm mọi quyết định đúng. | `R-S8-after-20261119-164617-c4869d` |
+| [4] | Các đơn S8-40–42 hoàn tự động tổng 282.000đ cho cùng khách; S8-43/44 sẽ làm vượt trần 300.000đ/ngày. | `write_gate` → `_customer_refund_cap_problem`, dùng `ops_limits.max_auto_refund_per_customer_per_day_vnd`; vượt trần thì chuyển người. | Chặn trước `issue_refund` | Ngăn khoản tự động làm tổng vượt trần; không chặn hoàn đã có phê duyệt hợp lệ. | `R-S8-after-20261119-164617-c4869d` |
+| [2] | Sau khi không còn phê duyệt sai, nhân viên vẫn cần lý do và quyền kiểm mẫu để thôi kiểm tay toàn bộ quyết định. | `config/operating_gates.json` đã có `approver_id=NV-HANH`, `decision_note=true`, `review_sampling_pct=10`; giữ nguyên vì khớp điều kiện trust của thẻ. | Vận hành | Giảm kiểm tay nhờ giải thích và kiểm mẫu; đây không phải cổng bảo đảm mọi quyết định đúng. | `R-S8-after-20261119-164617-c4869d` |
 
 ---
 
@@ -371,23 +371,33 @@ Thẻ S5 dùng mục này cho một con số kinh doanh: chi phí mỗi ticket t
 
 <a id="c9"></a>
 
-## C9 · Câu 3.7 · Fault tree SAU khi sửa (mã lần chạy: `__________`)
+## C9 · Câu 3.7 · Fault tree SAU khi sửa (mã lần chạy: `R-S8-after-20261119-170048-c72bc2`)
 
 Vẽ lại cây ở C6. Ở mỗi nhánh đã xử lý, thêm một nút `VÀ [gate … hỏng]` và ghi:
 
 ```
-[ĐỈNH] ______________________________
+[ĐỈNH] Trưởng ca bị ghi là người duyệt khoản chị không duyệt, cả ca kiểm tay, pilot đắt hơn làm tay
+       (sau sửa, gói S8: hoàn sai 0đ, lỗi hãng oan 0, 0 ca ùn, chờ lâu nhất 5 phút, 2.952đ/ticket, ROI 2,39)
  └─ HOẶC
- ├─ [1] ______________ VÀ [gate ______ hỏng]
- ├─ [2] ______________ VÀ [gate ______ hỏng]
- └─ [3] ______________ (còn hở?)
+ ├─ [1] Trợ lý tự chi khoản > 200.000đ bằng mã duyệt không hợp lệ (1a sai ticket · 1b hết hạn/thu hồi · 1c vượt max_vnd)
+ │     VÀ [gate write_gate → _approval_problem hỏng]
+ │     VÀ [bảng approvals ghi sai sự thật: mã đã thu hồi ngoài đời nhưng status vẫn "valid"]   ← còn hở, ngoài phần mềm
+ ├─ [4] Một khách nhận tổng hoàn tự động > 300.000đ trong ngày (S8-40 … S8-44, C-16)
+ │     VÀ [gate write_gate → _customer_refund_cap_problem / _auto_rows_today hỏng]
+ ├─ [2] Nhân viên mất tin nên kiểm lại 100%
+ │     VÀ [điều kiện tin số 4 lại trượt: còn ≥ 1 khoản dùng mã không hợp lệ trong ngày]   ← chỉ xảy ra khi [1] lọt qua
+ │     VÀ [cấu hình operations bị đổi: decision_note = false, review_sampling_pct < 10 hoặc approver_id ≠ NV-HANH]
+ │     (còn hở: ghi chú quyết định vẫn không nêu mã duyệt, reason trống, S8-05@11 after)
+ └─ [3] Hàng chờ một người duyệt ngập, chi phí vượt làm tay
+       VÀ [lượng ca chuyển người vượt 6 ca/giờ]   (còn hở khi lượng ticket tăng gấp 3: xử lý bằng runbook, không bằng code)
 ```
 
 | Nhánh | Gate (hàm trong `guards.py` / khoá config / metric trong `monitors.py`) | Tầng gate (phát hiện / chặn / giới hạn thiệt hại / vận hành) | Giảm hay ngăn? Vì sao | Nhánh còn hở |
 |---|---|---|---|---|
-| [1] | | | | |
-| [2] | | | | |
-| [3] | | | | |
+| [1] | `write_gate` → `_approval_problem`: mã phải có đúng một bản ghi, trùng `ticket_id`, `order_id`, `customer_id`, `approver_id` = NV-HANH, `status` = valid, `expires_at` ≥ hôm nay, `max_vnd` ≥ số tiền; khoản vượt `auto_limit_vnd` không có mã cũng chuyển người. Phát hiện: `approval_backed_refund_rate` (0,1154 ở base S8 → 0,0192 sau sửa, phần còn lại là `S8-05` có mã hợp lệ) | Chặn (trước `issue_refund`) + phát hiện | **Ngăn** với các nhánh 1a, 1b, 1c: cổng đối chiếu bảng `approvals` chứ không đọc ticket hay model, và chạy trước mọi lệnh ghi tiền. Trace `S8-01@11` after: `gate issue_refund escalate "phê duyệt sai ticket/đơn/khách…"`. Gói S8: hoàn sai 6.845.000đ → 0 | Cổng chỉ đúng khi bảng `approvals` đúng: nếu trưởng ca thu hồi mã ngoài đời mà chưa cập nhật `status`, khoản vẫn đi qua (giả định môi trường ở C5) |
+| [4] | `write_gate` → `_customer_refund_cap_problem` + `_auto_rows_today` (chỉ cộng khoản tự động của hôm nay), trần `ops_limits.max_auto_refund_per_customer_per_day_vnd` = 300.000đ. Phát hiện: `max_customer_daily_refund_vnd` (282.000đ sau sửa) | Giới hạn thiệt hại | **Ngăn** khoản tự động làm tổng của một khách vượt 300.000đ trong ngày; khoản có mã duyệt hợp lệ vẫn được chi (đã qua [1]) | Một người dùng nhiều mã khách (`customer_id`) khác nhau thì trần theo khách không thấy; trần cả ngày `daily_refund_cap_vnd` 1.600.000đ là lớp chặn thứ hai |
+| [2] | Config `operations`: `decision_note` = true, `review_sampling_pct` = 10, `approver_id` = NV-HANH (đặt từ vòng 1, giữ nguyên) cộng với [1] làm điều kiện tin số 4 đạt. Report grade: "Niềm tin của nhân viên duyệt: **đạt**"; kiểm lại 100% → 10% | Vận hành | **Giảm**: lòng tin là hành vi của người. Cổng chỉ loại bỏ lý do mất tin đã biết (mã không hợp lệ); một quyết định sai vì lý do khác vẫn có thể làm cả ca quay về kiểm tay | Ghi chú quyết định vẫn để `reason` trống và không nêu mã duyệt (`S8-05@11` after: `decision_note {"reason": "", ...}`), nên người duyệt chưa thấy căn cứ ngay trên ghi chú; xử lý bằng quy trình ở Runbook 4–5 |
+| [3] | Hệ quả của [2]: tỉ lệ vào hàng chờ về 0,1346; config `reviewers_on_shift` = 1, `review_capacity_per_hour` = 6, `max_queue_wait_minutes` = 60 không đổi. Report: 0 ca ùn, chờ lâu nhất 5 phút, chi phí 2.952đ/ticket, ROI 2,39 | Vận hành | **Giảm**: hàng chờ hết ngập vì nguyên nhân [2] được gỡ, không phải vì thêm người. Nếu lượng ticket tăng gấp 3 thì vẫn có thể ngập | Giờ cao điểm: dựa vào Runbook B7.6 và Runbook 5 kịch bản 1 (gọi người thứ hai, đặt 2 người và 12 ca/giờ, thu hẹp về HN và HCM) |
 
 ---
 
@@ -414,17 +424,21 @@ Ghi các dòng đổi sau sự cố. Mỗi dòng vẫn phải có một PIC có 
 
 | # nhóm | Trạng thái mới (Xong / Chưa / Không áp dụng) | Bằng chứng mới (mã lần chạy, mục phiếu, số trong report) | PIC |
 |---|---|---|---|
-| | | | |
-| | | | |
+| 1 Chất lượng | Xong | Gói S8 after `R-S8-after-20261119-170048-c72bc2`: pass_rate 0,8654 → 1,0, pass^k 1,0; bộ nền `R-base-after-20261119-170215-c72bc2` 110/110, `5 regression ✅`; bảng soát lỗi C2 | Trần Văn Tuấn |
+| 4 Quyền hạn | Xong | `write_gate` → `_approval_problem` trả quyền chi trên 200.000đ về NV-HANH khi mã không hợp lệ; `_customer_refund_cap_problem` cho trần 300.000đ/khách/ngày; C3.1 dòng "hoàn trên hạn mức" hết lệch | Trần Văn Tuấn |
+| 6 Chi phí | Xong | Gói S8: chi phí 11.325đ → 2.952đ/ticket (làm tay 10.000đ), ROI −2,44 → 2,39, không kho nào đắt hơn làm tay | Nguyễn Việt Hoàng |
+| 7 Vận hành | Xong | `monitors.py` thêm `approval_backed_refund_rate`, `max_customer_daily_refund_vnd` (`6 monitor ✅`); gói S8: 0 ca ùn, chờ lâu nhất 5 phút; Runbook 4–5 (C11); risk register C10 | Bùi Phước Anh |
+| 8 Con người, pháp lý | Xong (phần trong lab) · Chưa (phần ngoài lab) | Report grade S8: "Niềm tin của nhân viên duyệt: **đạt**", nhân viên kiểm lại 100% → 10%; lộ dữ liệu cá nhân 0. Chưa: văn bản gửi kiểm toán gỡ tên NV-HANH khỏi các khoản `S8-01`…`S8-04`, `S8-06` (Runbook 4) | Bùi Phước Anh |
+| 9 Quyết định | Chưa | Report grade `R-S8-grade-20261119-170048-c72bc2`: "Được phép cân nhắc 'Tiếp tục'"; chờ cả bàn chốt quyết định v2 ở C12 | Nguyễn Việt Hoàng |
 
 ### Runbook 4 · Sau sự cố trên thẻ (vòng 2)
 
 | Câu hỏi | Trả lời |
 |---|---|
 | Tín hiệu nào ở Runbook 2 (Phiếu B mục B7.5) lẽ ra phải báo trước sự cố này? Nó đã có chưa? | Hai tín hiệu đã có nhưng chỉ báo **sau** khi lòng tin đã mất: "thời gian chờ người duyệt lâu nhất" (216 phút, đỏ) và "chi phí mỗi ticket so với làm tay" (11.325đ, đỏ). Tín hiệu lẽ ra báo **trước** là "số khoản hoàn dùng mã duyệt không hợp lệ trong ngày": **chưa có** trong Runbook 2, cũng chưa có trong `monitors.py` (`6 monitor ❌`). Runbook 2 cũng chưa theo dõi "tỉ lệ nhân viên kiểm lại quyết định tự động" (đang 100% so với 10% đã thỏa thuận) |
-| Bàn thêm hoặc đổi ngưỡng nào, từ bao nhiêu thành bao nhiêu? | |
-| Bàn đổi gì về **người** (số người trực, ai đứng tên, ai được gọi)? | |
-| Bàn đổi gì về **phạm vi** hoặc **quy trình** (kiểm mẫu, ghi chú giải thích, trần)? | |
+| Bàn thêm hoặc đổi ngưỡng nào, từ bao nhiêu thành bao nhiêu? | Không đổi con số nào trong `config/operating_gates.json`. **Thêm** vào Runbook 2 ba tín hiệu mới: (1) `approval_backed_refund_rate`: bình thường ≈ 0,02 (gói S8 after), **vàng > 0,05** → NV-OANH soát mã duyệt của các khoản trong ngày; **đỏ > 0,10** (mức của gói S8 trước khi sửa là 0,1154) → tắt tự chi trên 200.000đ. (2) `max_customer_daily_refund_vnd`: bình thường ≤ 282.000đ, **vàng ≥ 250.000đ** → NV-OANH xem khách đó, **đỏ > 300.000đ** → cổng đã hỏng, tắt `issue_refund`. (3) "nhân viên kiểm lại quyết định tự động (%)": bình thường 10%, **đỏ > 10%** → NV-TUNG hỏi NV-HANH quyết định nào bị nghi ngờ (Runbook 5 kịch bản 3) |
+| Bàn đổi gì về **người** (số người trực, ai đứng tên, ai được gọi)? | Giữ **1 người trực** (NV-HANH, 6 ca/giờ): gói S8 sau sửa 0 ca ùn, chờ lâu nhất 5 phút, nên không cần trả thêm 30.000đ/ca. Giữ **NV-HANH đứng tên** (`approver_id`) và là người duy nhất cho chi trên 200.000đ. Thêm việc cho **NV-OANH**: mỗi cuối ngày đối chiếu `approval_id` trên sổ cái với bảng `approvals`. **NV-HANH được gọi thẳng NV-TUNG** khi thấy khoản đứng tên mình mà mình không duyệt, không chờ kiểm toán |
+| Bàn đổi gì về **phạm vi** hoặc **quy trình** (kiểm mẫu, ghi chú giải thích, trần)? | Phạm vi giữ **tất cả kho** (`pilot_scope` all, độ phủ 1,0): sau sửa không kho nào đắt hơn làm tay. Giữ **kiểm mẫu 10%** và **ghi chú giải thích** (`decision_note` = true). Quy trình mới: (1) khoản trên 200.000đ chỉ tự chi khi mã duyệt khớp đúng ticket, còn hạn, đủ hạn mức; còn lại vào hàng chờ của NV-HANH; (2) trần 300.000đ/khách/ngày chỉ tính khoản tự động của hôm nay; (3) khi trưởng ca thu hồi mã phải cập nhật `status` trong bảng `approvals` ngay, vì cổng chỉ đúng khi bảng đúng; (4) ghi chú quyết định hiện chưa nêu mã duyệt: người duyệt xem mã trong sổ cái cho tới khi ghi chú được bổ sung |
 | Nói gì với bên thứ ba bị ảnh hưởng (hãng, shop, người nhận, nhân viên duyệt), ai nói, trong bao lâu? | **Chị Hạnh và ca CSKH** (NV-TUNG nói, ngay trong ngày 16/11): xác nhận các khoản `S8-01`, `S8-02`, `S8-03`, `S8-04`, `S8-06` không do chị duyệt, lỗi ở cách trợ lý tra mã; gửi văn bản cho kiểm toán nội bộ để gỡ tên chị khỏi các khoản đó; nói rõ cổng mới kiểm mã gì và khi nào ca được quay về kiểm mẫu 10%. **Kế toán (NV-OANH)**: trong 1 ngày làm việc, soát lại sổ cái các khoản trên 200.000đ có `approval_id`, đánh dấu khoản cần duyệt bù. **Hãng** bị ghi lỗi kèm các ticket này: NV-OANH báo trong tuần đối soát và gỡ lỗi nếu ticket lẽ ra phải chuyển người duyệt. **Khách** đã nhận tiền: không đòi lại nếu khoản đó đúng quyền lợi theo chính sách; NV-HANH duyệt bù |
 | Dữ liệu cá nhân nào đã rời hệ thống mà không thu hồi được? Báo cho ai? | Không có: report grade S8 ghi "lộ dữ liệu cá nhân cho bên thứ ba" = 0 ở cả ba mốc; `legal.pii_fields_blocked_to_third_party` đã chặn `recipient_contact`, `customer_note` từ vòng 1. Thứ bị ghi sai là **tên người duyệt** (NV-HANH) trên sổ cái: không phải dữ liệu gửi ra ngoài nhưng là hồ sơ trách nhiệm, báo kiểm toán nội bộ và pháp chế để sửa bản ghi |
 | Sự cố lộ ra trước qua số máy đo, phản hồi của người, hay đọc nội dung? Nguồn nào bàn chưa có? | Lộ ra qua **phản hồi của người**: bảng kiểm toán nội bộ, rồi tin nhắn của chị Hạnh lúc 15:10 ngày 16/11, sau khi ca đã kiểm tay từ trưa. Số máy đo chỉ thấy hệ quả (hàng chờ, chi phí). Nguồn bàn **chưa có**: (1) đối chiếu tự động `approval_id` trên sổ cái với bảng `approvals` mỗi ngày; (2) chỉ số tỉ lệ nhân viên kiểm lại; (3) kênh để người duyệt báo "tôi không duyệt khoản này" ngay khi thấy, thay vì chờ kiểm toán |
