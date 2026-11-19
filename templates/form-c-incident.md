@@ -249,9 +249,9 @@ Bắt buộc: ít nhất ba dòng, trong đó **một dòng là nhánh bàn chư
 
 ### Câu 3.2 · Một specification mà nếu bị vi phạm thì gây ra tác hại trên thẻ
 
-Kiểm được bằng code hoặc bằng một con số trong report: …
+Kiểm được bằng code hoặc bằng một con số trong report: Một lệnh `issue_refund` có số tiền vượt hạn mức tự động của chính sách đang hiệu lực (REFUND-v3: 200.000đ) chỉ được ghi khi có một phê duyệt của người duyệt đứng tên (NV-HANH) thoả đủ năm điều kiện: `status` = `valid` (không phải `used` hay `revoked`); `expires_at` không sớm hơn ngày hiện tại (`as_of` 2026-11-16); `ticket_id` của phê duyệt trùng ticket đang xử lý; `order_id` và `customer_id` khớp đơn đang hoàn; số tiền hoàn không vượt `max_vnd`. Thiếu một điều kiện thì không ghi sổ và chuyển người duyệt. Nếu spec này bị vi phạm thì trợ lý hoàn tiền trên mã duyệt không hợp lệ, trưởng ca bị đứng tên oan, và nhân viên không còn tin nên kiểm tay 100% quyết định.
 
-Kiểm bằng gì (hàm trong `guards.py`, dòng report nào): …
+Kiểm bằng gì (hàm trong `guards.py`, dòng report nào): `write_gate` nhánh `tool == "issue_refund"`, so `action["amount_vnd"]`, `ticket_id`, `order_id` với bảng `approvals` trong `world_patch.json` (ví dụ ứng với thẻ: A-2802 hết hạn 2026-11-10, A-2803 `max_vnd` 150.000đ thấp hơn khoản hoàn, A-2806 `revoked`, A-2801 gắn ticket khác `T-OLD-2801` và đã `used`; đối chứng hợp lệ A-2805 cho S8-05). Trên report `lab10.grade --incident S8`: dòng `wrongful_refund_vnd` (gói nhìn thấy, đang 6.845.000đ ở mốc prepared) phải về 0, và dòng "Niềm tin của nhân viên duyệt" chuyển từ "chưa đạt" sang "đạt".
 
 ### Câu 3.3 · Một giả định về môi trường mà người thiết kế đã ngầm tin, nhưng nhiều khả năng sai ngoài thực tế
 
