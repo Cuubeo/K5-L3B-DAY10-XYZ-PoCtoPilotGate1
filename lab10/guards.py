@@ -29,8 +29,67 @@ lab10.helpers: db_delay_days, ticket_parcel, effective_policy, entitlement_vnd, 
 
 Mặc định dưới đây cho qua tất cả (= mốc base).
 """
+from datetime import date
+
 from . import helpers as H  # noqa: F401
 from .tools import Verdict
+
+
+def _approval_problem(ctx, action, order, policy):
+    amount = action.get("amount_vnd")
+    if not isinstance(amount, (int, float)) or isinstance(amount, bool):
+        return "số tiền hoàn không hợp lệ"
+
+    approval_id = action.get("approval_id")
+    required = amount > policy["auto_limit_vnd"] and action.get("payer") != "MERCHANT"
+    if not approval_id:
+        return "thiếu phê duyệt cho khoản vượt hạn mức tự động" if required else None
+
+    approvals = ctx.tools.lookup_approvals(approval_id=approval_id)
+    if len(approvals) != 1:
+        return "không tìm thấy duy nhất một bản ghi phê duyệt"
+    approval = approvals[0]
+    approver_id = ctx.gates.get("operations", {}).get("approver_id")
+
+    expires_at = approval.get("expires_at")
+    if not isinstance(expires_at, str) or not isinstance(ctx.as_of, str):
+        return "thiếu ngày hết hạn hoặc ngày đối chiếu"
+    try:
+        expiry = date.fromisoformat(expires_at)
+        as_of = date.fromisoformat(ctx.as_of)
+    except ValueError:
+        return "ngày phê duyệt không hợp lệ"
+
+    max_vnd = approval.get("max_vnd")
+    if (approval.get("ticket_id") != action.get("ticket_id")
+            or approval.get("ticket_id") != ctx.ticket.get("ticket_id")
+            or approval.get("order_id") != action.get("order_id")
+            or approval.get("customer_id") != ctx.ticket.get("customer_id")
+            or approval.get("customer_id") != order.get("customer_id")
+            or (approver_id and approval.get("approver_id") != approver_id)
+            or approval.get("status") != "valid"
+            or expiry < as_of
+            or not isinstance(max_vnd, (int, float))
+            or isinstance(max_vnd, bool)
+            or max_vnd < amount):
+        return "phê duyệt sai ticket/đơn/khách/duyệt viên, hết hạn, bị thu hồi hoặc không đủ hạn mức"
+    return None
+
+
+def _customer_refund_cap_problem(ctx, action, order):
+    cap = ctx.tools.ops_limits().get("max_auto_refund_per_customer_per_day_vnd")
+    if cap is None or action.get("approval_id"):
+        return None
+
+    customer_id = order.get("customer_id")
+    spent = sum(row["amount_vnd"] for row in ctx.tools.ledger_rows(customer_id=customer_id)
+                if not row.get("approval_id"))
+    amount = action["amount_vnd"]
+    if spent + amount > cap:
+        ctx.log("customer_refund_cap", customer_id=customer_id, spent_vnd=spent,
+                proposed_vnd=amount, cap_vnd=cap)
+        return "vượt trần hoàn tự động mỗi khách trong ngày"
+    return None
 
 
 def pre_guard(ctx):
@@ -61,6 +120,15 @@ def write_gate(ctx, action):
         return Verdict.escalate("không tra được đơn hoặc chính sách đang hiệu lực")
 
     if tool == "issue_refund":
+        approval_problem = _approval_problem(ctx, action, order, policy)
+        if approval_problem:
+            ctx.log("invalid_approval", approval_id=action.get("approval_id"), reason=approval_problem)
+            return Verdict.escalate(f"{approval_problem}; chuyển người duyệt")
+
+        customer_cap_problem = _customer_refund_cap_problem(ctx, action, order)
+        if customer_cap_problem:
+            return Verdict.escalate(f"{customer_cap_problem}; chuyển người duyệt")
+
         parcel = H.ticket_parcel(order, ctx.ticket, ctx.as_of)
         delay = H.db_delay_days(parcel, ctx.as_of)
         proposal = next((e for e in reversed(ctx.events) if e.get("type") == "proposal"), None)
