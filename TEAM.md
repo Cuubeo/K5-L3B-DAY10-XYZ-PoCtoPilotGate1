@@ -75,3 +75,36 @@ Dùng trợ lý AI (Claude) để đọc code và dữ liệu, gợi ý cách vi
 
 - Một điều học được: lòng tin của người duyệt là một điều kiện vận hành đo được, không sửa được chỉ bằng một dòng code; chỉ một khoản chi sai mã duyệt là đủ để cả ca quay về kiểm tay 100% và pilot lỗ.
 - Một điều còn chưa chắc: cổng kiểm mã duyệt chỉ đúng khi bảng `approvals` được cập nhật kịp; chưa biết ngoài đời việc thu hồi mã chậm bao lâu và tỉ lệ nhân viên thật sự chuyển sang kiểm mẫu 10%.
+
+## NguyenVietHoang-2A202604104
+
+### Phần việc phụ trách
+
+Vai **Sản phẩm và kinh doanh**.
+- Phiếu A: câu 1.1 (mục tiêu cấp hệ thống), câu 1.6 (Bản tiêu chí: sáu câu "Nếu … thì chúng tôi sẽ …", ranh giới đầu ra, bốn câu soát, ba số `business_ops`).
+- `config/acceptance_criteria.json`: ngưỡng bắt buộc, ngưỡng nên có, `business_ops`, `stop_condition`, bốn dòng `decision_rule`.
+- Phiếu B: câu 2.3 (B3 bản đồ dữ liệu và ví dụ drift), câu 2.9 (B7.4 cổng kinh doanh), lăng kính kinh doanh của pre-mortem (B6), quyết định v1 (B8, cùng cả bàn).
+- `config/operating_gates.json` mục `business`.
+- Phiếu C: câu 3.2 (C5, specification), phần `business` của bảng sửa C7 nếu cần, quyết định v2 (C12, cùng cả bàn).
+
+### Đóng góp cụ thể
+
+- Đặt ngưỡng tiêu chí trước khi chạy đánh giá: `pass_rate_min` 0,90, `pass_k_min` 0,80, ba chỉ số an toàn bằng 0, `escalation_rate_max` 0,35, `cost_per_ticket_vnd_max` 8.000đ, `roi_min` 0,25 (khớp công thức ROI = tiết kiệm / chi phí của `lab10/ops.py`), `queue_stuck_max` 0; viết điều kiện dừng và bốn dòng `decision_rule` cho Tiếp tục, Thu hẹp, Cải tiến thêm, Dừng.
+- Vẽ bản đồ dữ liệu của trợ lý từ `data/world.json` (nguồn sự thật là tracking của hãng, không phải số ngày khách khai) và chọn ví dụ drift: chính sách REFUND-v3 hết hiệu lực 2026-11-30, REFUND-v4 có từ 2026-12-01 (hạn mức tự động từ 200.000đ xuống 100.000đ, trễ do bất khả kháng không ghi lỗi hãng).
+- Đặt cổng kinh doanh kèm lý do có số: `daily_refund_cap_vnd` 1.600.000 (80% ngân sách Finance 2.000.000đ), `cost_budget_per_ticket_vnd` 1.200 (80% trần LLM 1.500đ), `pilot_scope` `all` để đo trước khi thu hẹp, `roi_min` 0,25.
+- Thẻ S8: viết specification cho phê duyệt hợp lệ (năm điều kiện: `status`, `expires_at`, `ticket_id`, `order_id` và `customer_id`, `max_vnd`) và chỉ ra cách kiểm bằng `write_gate` và dòng `wrongful_refund_vnd` trong report. Ở mốc prepared của gói sự cố: hoàn sai 6.845.000đ, 35 lỗi hãng oan, 36 ca bị ùn, chi phí 11.325đ mỗi ticket so với 10.000đ làm tay, ROI −2,44; nguyên nhân chính nằm ở code kiểm phê duyệt, không ở các con số `business`.
+
+### Bằng chứng
+
+- Commit: `5f185c2`, `e4edcde` (Phiếu A, `acceptance_criteria.json`) · `a42722b` (B3, B7.4, `business`) · `8e7ebdf` (C5 câu 3.2).
+- Lần chạy: `R-S8-grade-20261119-163352-212a81` (mốc prepared thẻ S8, đọc để viết spec và chẩn đoán). Chưa có lần chạy mốc after của riêng tôi; sẽ bổ sung mã khi kỹ sư sửa xong và chạy `lab10.eval --suite S8 --stage after`.
+- Phiếu: Phiếu A mục A1 (câu 1.1), A4 (câu 1.6) · Phiếu B mục B3, B7.4 · Phiếu C mục C5 (câu 3.2); C7 và C12 sẽ điền sau khi có mốc after.
+
+### Dùng AI
+
+Dùng trợ lý AI (Claude) để đọc đề, `data/world.json` và code `lab10/ops.py`, soạn bản nháp cho các ô thuộc vai Sản phẩm và kinh doanh, rồi tôi và cả bàn soát lại. Các ngưỡng tiêu chí và con số `business` do bàn quyết định; tôi đã đối chiếu với `ops_limits`, `ops_facts` và report.
+
+### Exit ticket
+
+- Một điều học được: phải đặt ngưỡng trước khi xem kết quả, và đọc kỹ số trong report trước khi đổ lỗi cho con số kinh doanh; ở thẻ S8, chi phí và ROI xấu vì nhân viên kiểm tay 100%, mà gốc là phê duyệt sai, không phải do trần hoàn hay ngân sách.
+- Một điều còn chưa chắc: `cost_budget_per_ticket_vnd` = 1.200 và `pilot_scope` = `all` có phù hợp ngoài đời không, vì dữ liệu là mock và chưa đo khi lượng ticket tăng gấp ba.
