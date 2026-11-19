@@ -108,3 +108,34 @@ Dùng trợ lý AI (Claude) để đọc đề, `data/world.json` và code `lab1
 
 - Một điều học được: phải đặt ngưỡng trước khi xem kết quả, và đọc kỹ số trong report trước khi đổ lỗi cho con số kinh doanh; ở thẻ S8, chi phí và ROI xấu vì nhân viên kiểm tay 100%, mà gốc là phê duyệt sai, không phải do trần hoàn hay ngân sách.
 - Một điều còn chưa chắc: `cost_budget_per_ticket_vnd` = 1.200 và `pilot_scope` = `all` có phù hợp ngoài đời không, vì dữ liệu là mock và chưa đo khi lượng ticket tăng gấp ba.
+
+
+## TranVanTuan-2A202604092
+
+### Phần việc phụ trách
+
+- Vai: Kỹ sư cổng 1.
+- Câu 1.3 (Phiếu A mục A2): viết offline metric cho bước đọc ticket và trích xuất dữ kiện.
+- Câu 2.1 (Phiếu B mục B0, B1): chạy mốc base, đọc kết quả và ghi mã lần chạy.
+- Câu 2.6 (Phiếu B mục B7.1): triển khai cổng trong `lab10/guards.py`; chịu trách nhiệm chính về các kiểm tra trước lệnh ghi.
+- Câu 3.5–3.7 (Phiếu C mục C7–C10): hỗ trợ sửa cổng kỹ thuật, kiểm tra hồi quy và làm bằng chứng cây lỗi trước/sau sửa.
+
+### Đóng góp cụ thể
+
+- Viết offline metric đọc ticket trong Phiếu A: đo tỉ lệ trích xuất đúng hãng, kho, số tiền, thời gian giao và lý do khiếu nại; quy định dữ liệu nhãn, công thức tính và cách xử lý thiếu dữ kiện.
+- Chạy đánh giá mốc base, ghi nhận mức `pass_rate 0,9909`, hoàn sai `20.000đ`, lỗi hãng oan `1` và lộ PII `0`; đối chiếu kho HCM và hãng VNX là phân khu xấu nhất.
+- Thêm cổng gắn với tracking và chính sách: đối chiếu mã đơn, tra chính sách đang hiệu lực theo ngày, kiểm phê duyệt, trần hoàn mỗi khách, độ trễ theo tracking, quyền lợi hoàn tiền và bằng chứng quy lỗi cho hãng.
+- Viết cơ chế ghim chính sách theo ngày hiệu lực bằng `H.effective_policy`; khi không có chính sách đang hiệu lực thì chuyển ticket cho người duyệt.
+- Hỗ trợ phần sửa và kiểm tra vòng 2 cho thẻ S8, đặc biệt giữ nguyên các cổng vòng 1 đã chốt và kiểm không có ca nền mới hỏng.
+
+### Bằng chứng
+
+- Commit `33f26aa`: cổng vòng 1 và cập nhật Phiếu B mục 2.1, 2.6.
+- Commit `cef21cf`: hoàn thiện offline metric câu 1.3.
+- Commit `bb16270`: phần sửa cổng và cập nhật Phiếu C mục 3.5.
+- Commit `fe0a110`: hợp nhất nội dung làm việc ở nhánh `tuantv`.
+
+### Exit ticket
+
+- Một điều học được: cổng phải đối chiếu với nguồn sự thật và kiểm trước lệnh ghi, không chỉ kiểm LLM/prompt.
+- Một điều còn chưa chắc: cách cân bằng mức độ chuyển người duyệt và chi phí vận hành để vượt ngưỡng an toàn mà vẫn giữ pilot khả thi.
